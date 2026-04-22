@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consulta de CUIL</title>
+    <style>
+      :root {
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+      body {
+        margin: 0;
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 24px;
+      }
+      .card {
+        width: min(520px, 100%);
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+      }
+      h1 {
+        margin-top: 0;
+        margin-bottom: 6px;
+      }
+      p {
+        margin-top: 0;
+        color: #475569;
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+      label {
+        font-weight: 600;
+      }
+      input,
+      select,
+      button {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 1rem;
+      }
+      button {
+        cursor: pointer;
+        border: none;
+        background: #2563eb;
+        color: white;
+        font-weight: 600;
+      }
+      button:hover {
+        background: #1d4ed8;
+      }
+      #result {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 10px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        display: none;
+      }
+      .error {
+        background: #fef2f2 !important;
+        border-color: #fecaca !important;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Obtener CUIL</h1>
+      <p>Ingresá DNI y sexo para consultar el CUIL vía backend + API ANSES.</p>
+
+      <form id="cuil-form" class="grid">
+        <div>
+          <label for="dni">DNI</label>
+          <input id="dni" name="dni" inputmode="numeric" pattern="[0-9]*" required />
+        </div>
+
+        <div>
+          <label for="sexo">Sexo</label>
+          <select id="sexo" name="sexo" required>
+            <option value="">Seleccionar...</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="X">No binario / X</option>
+          </select>
+        </div>
+
+        <button type="submit">Consultar CUIL</button>
+      </form>
+
+      <section id="result"></section>
+    </main>
+
+    <script>
+      const form = document.getElementById("cuil-form");
+      const result = document.getElementById("result");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        result.classList.remove("error");
+        result.style.display = "block";
+        result.textContent = "Consultando...";
+
+        const data = Object.fromEntries(new FormData(form).entries());
+
+        try {
+          const response = await fetch("/api/cuil", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+
+          const payload = await response.json();
+
+          if (!response.ok) {
+            throw new Error(payload.error || "No se pudo obtener el CUIL");
+          }
+
+          result.innerHTML = `
+            <strong>CUIL:</strong> ${payload.cuil}<br>
+            <strong>Fuente:</strong> ${payload.fuente}
+            ${payload.endpointConsumido ? `<br><small>Endpoint: ${payload.endpointConsumido}</small>` : ""}
+          `;
+        } catch (error) {
+          result.classList.add("error");
+          result.textContent = error.message;
+        }
+      });
+    </script>
+  </body>
+</html>
