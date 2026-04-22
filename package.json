@@ -1,0 +1,9 @@
+{
+  "name": "cuil-anses-app",
+  "version": "1.0.0",
+  "description": "Frontend + backend para obtener CUIL desde DNI/sexo usando API de ANSES",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
